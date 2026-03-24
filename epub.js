@@ -315,11 +315,16 @@ const getMetadata = opf => {
 const parseNav = (doc, resolve = f => f) => {
     const { $, $$, $$$ } = childGetter(doc, NS.XHTML)
     const resolveHref = href => href ? decodeURI(resolve(href)) : null
+    const getFallbackLabel = href => {
+        if (!href) return ''
+        const value = href.split('#').at(-1) || href.split('/').at(-1) || href
+        return value.replace(/\.[a-z0-9]+$/i, '').replace(/[-_]+/g, ' ')
+    }
     const parseLI = getType => $li => {
         const $a = $($li, 'a') ?? $($li, 'span')
         const $ol = $($li, 'ol')
         const href = resolveHref($a?.getAttribute('href'))
-        const label = getElementText($a) || $a?.getAttribute('title')
+        const label = getElementText($a) || $a?.getAttribute('title') || getFallbackLabel(href)
         // TODO: get and concat alt/title texts in content
         const result = { label, href, subitems: parseOL($ol) }
         if (getType) result.type = $a?.getAttributeNS(NS.EPUB, 'type')?.split(/\s/)
